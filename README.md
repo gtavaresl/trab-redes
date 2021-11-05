@@ -16,6 +16,8 @@ Caso não tenha como visualizar a tabela, esse site funciona: https://inloop.git
 
 
 Criptografia Hash:
+
+
             instalar: sudo apt-get install libssl-dev   (biblioteca openssl)
             
             Rodar: gcc -o sha256 sha256.c -lcrypto
