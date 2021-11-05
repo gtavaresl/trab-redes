@@ -9,7 +9,7 @@ Fluxograma:
              instalar: sudo apt-get install -y libsqlite3-dev
                        sudo apt-get install sqlite3
                        
-             rodar:    gcc -o version fluxograma.c -lsqlite3
+             rodar:    g++ -o version fluxograma.c -lsqlite3
                        ./version
 
 Caso não tenha como visualizar a tabela, esse site funciona: https://inloop.github.io/sqlite-viewer/
