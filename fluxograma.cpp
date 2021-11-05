@@ -8,29 +8,57 @@
 
 using namespace std;
 
-static int callback(void* data, int argc, char** argv, char** azColName)
+class Data_Query
 {
+public:
+    char data[MAX_CHAR];
+    Data_Query();
+};
+
+
+int callback_client(void* data, int argc, char** argv, char** azColName){
+    Data_Query *DQ = (Data_Query *) data;
     const char *id = "id";
     for (int i = 0; i < argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
         if (strcmp(azColName[i], id) == 0){
-            cout << "Entrou aqui!" << endl;
-            data = (char *)argv[i];
-            cout << data << endl;
+            strcpy(DQ->data, argv[i]);
+            break;
         }
     }
-  
-    printf("\n");
     return 0;
 }
 
-int get_client(sqlite3 *db, string username, string password){
-    string user_id;
-    cout << user_id << endl;
+int callback_password(void* data, int argc, char** argv, char** azColName){
+    Data_Query *DQ = (Data_Query *) data;
+    const char *password = "password";
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(azColName[i], password) == 0){
+            strcpy(DQ->data, argv[i]);
+            break;
+        }
+    }
+    return 0;
+}
+
+int callback_list_passwords(void *data, int argc, char** argv, char** azColName){
+    for (int i = 0; i < argc; i++)
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    return 0;
+}
+
+string get_client(sqlite3 *db, string username, string password){
+    Data_Query *user_id = (Data_Query *)malloc(sizeof(Data_Query));
+    strcpy(user_id->data, "-1");
     string sql_query = "SELECT *\nFROM user\nWHERE name = '" + username + "' \nAND password = '" + password + "';";
-    int rc = sqlite3_exec(db, sql_query.c_str(), callback, &user_id, NULL);
-    
-    return 1;
+    int rc = sqlite3_exec(db, sql_query.c_str(), callback_client, user_id, NULL);
+    return user_id->data;
+}
+
+string get_password(sqlite3 *db, string user_id, string website){
+    Data_Query *password = (Data_Query *)malloc(sizeof(Data_Query));
+    string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";
+    int rc = sqlite3_exec(db, sql_query.c_str(), callback_password, password, NULL);
+    return password->data;
 }
 
 // Insere novo cliente na tabela user
@@ -70,7 +98,7 @@ int insert_client(sqlite3 *db){
     return 1;
 }
 
-int insere_senha(sqlite3 *db, int user_id){
+int insert_new_password(sqlite3 *db, int user_id){
     char website[MAX_CHAR];
     char password[MAX_CHAR];
     char *err_msg;
@@ -121,9 +149,10 @@ int main() {
         return 1;
     }
     
-    get_client(db, "Teste 1", "123456");
+    string user_id = get_client(db, "Teste 1", "123456");
     //insert_client(db);
     //insere_senha(db, 1);
+    cout << "User: " << user_id << "\nPassword: " << get_password(db, "1", "google.com") << endl;
 
     sqlite3_close(db);
     
