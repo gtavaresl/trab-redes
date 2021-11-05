@@ -1,0 +1,13 @@
+CREATE TABLE user(
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+   	name TEXT NOT NULL,
+   	password TEXT NOT NULL
+);
+
+CREATE TABLE password(
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+   	user_id TEXT NOT NULL,
+	website TEXT,
+   	password TEXT,
+   	FOREIGN KEY (user_id) REFERENCES USER(id)
+);
