@@ -11,3 +11,5 @@ Fluxograma:
                        
              rodar:    gcc -o version fluxograma.c -lsqlite3
                        ./version
+
+Caso não tenha como visualizar a tabela, esse site funciona: https://inloop.github.io/sqlite-viewer/
