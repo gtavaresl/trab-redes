@@ -18,9 +18,8 @@ public:
 
 int callback_client(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
-    const char *id = "id";
     for (int i = 0; i < argc; i++) {
-        if (strcmp(azColName[i], id) == 0){
+        if (strcmp(azColName[i], "id") == 0){
             strcpy(DQ->data, argv[i]);
             break;
         }
@@ -30,9 +29,8 @@ int callback_client(void* data, int argc, char** argv, char** azColName){
 
 int callback_password(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
-    const char *password = "password";
     for (int i = 0; i < argc; i++) {
-        if (strcmp(azColName[i], password) == 0){
+        if (strcmp(azColName[i], "password") == 0){
             strcpy(DQ->data, argv[i]);
             break;
         }
@@ -62,18 +60,8 @@ string get_password(sqlite3 *db, string user_id, string website){
 }
 
 // Insere novo cliente na tabela user
-int insert_client(sqlite3 *db){
-    char username[MAX_CHAR];
-    char user_password[MAX_CHAR];
+string insert_client(sqlite3 *db, string username, string user_password){
     char *err_msg;
-
-    printf("Digite seu nome de usuário: ");
-    fgets(username, MAX_CHAR, stdin);
-    username[strlen(username)-1] = '\0';
-
-    printf("Digite sua senha: ");
-    fgets(user_password, MAX_CHAR, stdin);
-    user_password[strlen(user_password)-1] = '\0';
 
     string sql_final;
     string sql1 = "INSERT INTO user (name, password)\nVALUES('";
@@ -85,31 +73,29 @@ int insert_client(sqlite3 *db){
     int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
     
     if (rc != SQLITE_OK ) {
-        cerr << "Error Insert" << endl;
+        cerr << "Error ao inserir" << endl;
         
         sqlite3_free(err_msg);        
         sqlite3_close(db);
         
-        return -1;
+        return "-1";
     }
-    printf("Usuário incluido com sucesso!\n");
+    cout << "Usuário incluido com sucesso!" << endl;
 
-    // Deve retornar o id do usuário
-    return 1;
+    string user_id = get_client(db, username, user_password);
+    return user_id;
 }
 
-int insert_new_password(sqlite3 *db, int user_id){
-    char website[MAX_CHAR];
-    char password[MAX_CHAR];
+int insert_new_password(sqlite3 *db, string user_id){
+    string website;
+    string password;
     char *err_msg;
 
-    printf("Digite nome do website: ");
-    fgets(website, MAX_CHAR, stdin);
-    website[strlen(website)-1] = '\0';
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
 
-    printf("Digite sua senha: ");
-    fgets(password, MAX_CHAR, stdin);
-    password[strlen(password)-1] = '\0';
+    cout << "Digite sua senha: " << endl;
+    getline(cin, password);
 
     string sql_final;
 
@@ -117,24 +103,42 @@ int insert_new_password(sqlite3 *db, int user_id){
     string sql2 = "', '";
     string sql3 = "');";
 
-    sql_final = sql1 + to_string(user_id) + sql2 + website + sql2 + password + sql3;
+    sql_final = sql1 + user_id + sql2 + website + sql2 + password + sql3;
 
     int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
     
     if (rc != SQLITE_OK ) {
         cerr << "Insert Password Error!" << endl;
-        
         sqlite3_free(err_msg);        
         sqlite3_close(db);
         
         return -1;
     }
 
-    printf("Senha incluida com sucesso!\n");
+    cout << "Senha incluida com sucesso!" << endl;
     return 1;
 }
 
-int main() {
+string login(sqlite3 *db){
+    string username;
+    string user_password;
+    
+    cout << "Digite seu nome de usuário: ";
+    getline(cin, username);
+
+    cout << "Digite sua senha: ";
+    getline(cin, user_password);
+    
+    string user_id = get_client(db, username, user_password);
+    if(strcmp(user_id.c_str(), "-1") == 0){
+        cout << "Cliente ainda não existe!" << endl;
+        user_id = insert_client(db, username, user_password);
+    }
+    cout << "Login concluído!" << endl;
+    return user_id;
+}
+
+int main(){
     
     sqlite3 *db;
     char *err_msg = 0;
@@ -149,10 +153,11 @@ int main() {
         return 1;
     }
     
-    string user_id = get_client(db, "Teste 1", "123456");
+    string user_id = login(db);
+    //get_client(db, "Teste 1", "123456");
     //insert_client(db);
-    //insere_senha(db, 1);
-    cout << "User: " << user_id << "\nPassword: " << get_password(db, "1", "google.com") << endl;
+    insert_new_password(db, user_id);
+    //cout << "User: " << user_id << "\nPassword: " << get_password(db, "1", "google.com") << endl;
 
     sqlite3_close(db);
     
