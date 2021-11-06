@@ -1,16 +1,16 @@
 # trab-redes
 Usa a lib pthreads -> requer rodar em linux
 
-P/ compilar: gcc -pthread server.c -o {nome_exec}
-             gcc -pthread client.c -o {nome_exec}
+P/ compilar: g++ -o {nome_exec} server.cpp -pthread -lsqlite3
+             g++ -o {nome_exec} client.cpp -pthread
              
 Fluxograma:  
 
              instalar: sudo apt-get install -y libsqlite3-dev
                        sudo apt-get install sqlite3
                        
-             rodar:    g++ -o version fluxograma.c -lsqlite3
-                       ./version
+             rodar:    g++ -o {nome_exec} fluxograma.cpp -lsqlite3
+                       ./{nome_exec}
 
 Caso não tenha como visualizar a tabela, esse site funciona: https://inloop.github.io/sqlite-viewer/
 
