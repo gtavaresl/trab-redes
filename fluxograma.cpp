@@ -86,6 +86,46 @@ string insert_client(sqlite3 *db, string username, string user_password){
     return user_id;
 }
 
+//Altera uma senha existente
+int update_password(sqlite3 *db, string user_id){
+    string website;
+    string password;
+    char *err_msg;
+
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
+
+    cout << "Digite sua nova senha: " << endl;
+    getline(cin, password);
+
+    string sql_final;
+
+    string sql1 = "UPDATE password SET password = '";
+    string sql2 = "' WHERE user_id == '";
+    string sql3 = "' AND website == '";
+    string sql4 = "';";
+
+    sql_final = sql1 + password + sql2 + user_id +  sql3 + website + sql4;
+
+    int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
+        cerr << "Insert Password Error!" << endl;
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        
+        return -1;
+    }
+
+    cout << "Senha atualizada com sucesso!" << endl;
+    return 1;
+}
+
+//Deleta uma senha no banco de dados
+int delete_password(sqlite3 *db, string user_id, string website){
+    return 0;
+}
+
 //FALTA TRATAR O ERRO DE INSERIR UMA SENHA JA EXISTENTE
 //SUGESTÃO: CASO TENTE INSERIR UMA SENHA JA EXISTENTE DELETA A ANTERIOR E ATUALIZA COM A NOVA
 int insert_new_password(sqlite3 *db, string user_id){
@@ -168,7 +208,7 @@ int menu(sqlite3 *db, string username){
         break;
     
     case 3:
-        /* code */
+        update_password(db,username);
         return 1;
         break;
     
