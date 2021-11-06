@@ -15,7 +15,10 @@ public:
     Data_Query();
 };
 
-
+/**
+ *
+ *
+ */
 int callback_client(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
     for (int i = 0; i < argc; i++) {
@@ -138,6 +141,47 @@ string login(sqlite3 *db){
     return user_id;
 }
 
+int menu(string username){    
+    system("clear");
+    cout << "1 - Guardar uma nova senha;" << endl;
+    cout << "2 - Receber uma senha guardada;" << endl;
+    cout << "3 - Modificar uma senha guardada;" << endl;
+    cout << "4 - Deletar uma senha guardada;" << endl;
+    cout << "5 - Sair;" << endl << endl << "Digite a função que deseja:" << endl;
+
+    int opcao_int;
+    string opcao;
+    getline(cin,opcao);
+
+    opcao_int = stoi(opcao);
+    switch (opcao_int)
+    {
+    case 1:
+        /* code */
+        return 1;
+        break;
+    
+    case 2:
+        /* code */
+        return 1;
+        break;
+    
+    case 3:
+        /* code */
+        return 1;
+        break;
+    
+    case 4:
+        /* code */
+        return 1;
+        break;
+    
+    default:
+        return 0;
+        break;
+    }
+}
+
 int main(){
     
     sqlite3 *db;
@@ -154,9 +198,14 @@ int main(){
     }
     
     string user_id = login(db);
+
+    int loop = 1;
+    while(loop){
+        loop = menu(user_id);
+    }
     //get_client(db, "Teste 1", "123456");
     //insert_client(db);
-    insert_new_password(db, user_id);
+    //insert_new_password(db, user_id);
     //cout << "User: " << user_id << "\nPassword: " << get_password(db, "1", "google.com") << endl;
 
     sqlite3_close(db);
