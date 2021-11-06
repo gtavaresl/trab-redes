@@ -44,18 +44,19 @@ int callback_list_passwords(void *data, int argc, char** argv, char** azColName)
 }
 
 string get_client(sqlite3 *db, string username, string password){
-    Data_Query *user_id = (Data_Query *)malloc(sizeof(Data_Query));
-    strcpy(user_id->data, "-1");
+    Data_Query *user_id = (Data_Query *)calloc(1, sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM user\nWHERE name = '" + username + "' \nAND password = '" + password + "';";
     int rc = sqlite3_exec(db, sql_query.c_str(), callback_client, user_id, NULL);
+    
     return user_id->data;
 }
 
 //FALTA TRATAR O ERRO DO WEBSITE INSERIDO NAO EXISTIR NO DB
 string get_password(sqlite3 *db, string user_id, string website){
-    Data_Query *password = (Data_Query *)malloc(sizeof(Data_Query));
+    Data_Query *password = (Data_Query *)calloc(1, sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";
     int rc = sqlite3_exec(db, sql_query.c_str(), callback_password, password, NULL);
+
     return password->data;
 }
 
@@ -172,7 +173,7 @@ string login(sqlite3 *db){
     getline(cin, user_password);
     
     string user_id = get_client(db, username, user_password);
-    if(strcmp(user_id.c_str(), "-1") == 0){
+    if(user_id.empty()){
         cout << "Cliente ainda não existe!" << endl;
         user_id = insert_client(db, username, user_password);
     }
@@ -190,6 +191,7 @@ int menu(sqlite3 *db, string username){
     int opcao_int;
     string opcao;
     string website;
+    string password;
     getline(cin,opcao);
 
     opcao_int = stoi(opcao);
@@ -203,7 +205,12 @@ int menu(sqlite3 *db, string username){
     case 2:
         cout << "Digite o website:" << endl;
         getline(cin,website);
-        cout << "Sua senha do " << website << " é " << get_password(db,username,website) << endl;
+        password = get_password(db, username, website);
+        if (password.empty()){
+            cout << "Webite não cadastrado!" << endl;
+        } else {
+            cout << "Sua senha do " << website << " é " << password << endl;
+        }
         return 1;
         break;
     
