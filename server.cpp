@@ -146,6 +146,7 @@ string insert_client(sqlite3 *db, string username, string user_password){
 string login(int clientSocket, sqlite3 *db){
     string username;
 	string user_password;
+	string user_id;
 	// Recv Username
 	username = recv_string(clientSocket);
 	
@@ -156,11 +157,13 @@ string login(int clientSocket, sqlite3 *db){
 	
 	cout << "\n Userpass >" << user_password << "<\n" << endl;
 	
-	string user_id = get_client(db, username, user_password);
+	user_id = get_client(db, username, user_password);
+
     if(user_id.empty()){
         cout << "Cliente ainda não existe!" << endl;
         user_id = insert_client(db, username, user_password);
     }
+
 	send_string(clientSocket, user_id);
     cout << "Login concluído!" << endl;
     return user_id;
@@ -185,20 +188,6 @@ void* serverthread(void *param){
     }
 
 	user_id = login(clientSocket, db);
-	
-	/*
-	// Lock the semaphore
-	sem_wait(&x);
-	clientcount++;
-	// Unlock the semaphore
-	sem_post(&x);
-	// Lock the semaphore
-	sem_wait(&x);
-	clientcount--;
-	
-	// Unlock the semaphore
-	sem_post(&x);
-	*/
 
 	pthread_exit(NULL);
 }

@@ -55,31 +55,143 @@ string login(int network_socket){
 	string username;
     string user_password;
 	string user_id;
-    
     cout << "Digite seu nome de usuário: ";
     getline(cin, username);
+	send_string(network_socket, username);
 
     cout << "Digite sua senha: ";
     getline(cin, user_password);
     
-	send_string(network_socket, username);
 	send_string(network_socket, user_password);
-
-    user_id = recv_string(network_socket);
-	/*string user_id = get_client(db, username, user_password);
-    if(user_id.empty()){
-        cout << "Cliente ainda não existe!" << endl;
-        user_id = insert_client(db, username, user_password);
-    }*/
-
-
+	
+	user_id = recv_string(network_socket);
     cout << "Login concluído!" << endl;
 	cout << "User id: " << user_id << endl;
+
     return user_id;
+}
+
+int insert_new_password(int network_socket, string user_id){
+    string website;
+    string password;
+	string response;
+
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
+	send_string(network_socket, website);
+
+    cout << "Digite sua senha: " << endl;
+    getline(cin, password);
+	send_string(network_socket, website);
+
+	response = recv_string(network_socket);
+
+    cout << response << endl;
+    return 1;
+}
+
+string get_password(int network_socket){
+    string website;
+    string password;
+	
+	cout << "Digite o website:" << endl;
+	getline(cin, website);
+	send_string(network_socket, website);
+	
+	password = recv_string(network_socket);
+	if (strcmp(password.c_str(), "-1") == 0){
+		cout << "Website não cadastrado!" << endl;
+	} else {
+		cout << "Sua senha do " << website << " é " << password << endl;
+	}
+
+}
+
+//Altera uma senha existente
+int update_password(int network_socket){
+    string website;
+    string password;
+    int response;
+
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
+	send_string(network_socket, website);
+
+    cout << "Digite sua nova senha: " << endl;
+    getline(cin, password);
+	send_string(network_socket, password);
+
+	response = stoi(recv_string(network_socket));
+	if (response == 1)
+    	cout << "Senha atualizada com sucesso!" << endl;
+	else
+		cout << "Erro ao atualizar senha!" << endl;
+
+    return response;
+}
+
+//Deleta uma senha no banco de dados
+int delete_password(int network_socket){
+    string website;
+    int response;
+
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
+	send_string(network_socket, website);
+
+	response = stoi(recv_string(network_socket));
+	if (response == 1)
+    	cout << "Senha deletada com sucesso!" << endl;
+	else
+		cout << "Erro ao deletar senha!" << endl;
+
+
+    return 1;
+}
+
+int menu(int network_socket, string user_id) {        
+    cout << "1 - Guardar uma nova senha;" << endl;
+    cout << "2 - Receber uma senha guardada;" << endl;
+    cout << "3 - Modificar uma senha guardada;" << endl;
+    cout << "4 - Deletar uma senha guardada;" << endl;
+    cout << "5 - Sair;" << endl << endl << "Digite a função que deseja:" << endl;
+
+    int opcao_int;
+    string opcao;
+    getline(cin,opcao);
+	send_string(network_socket, opcao);
+
+    opcao_int = stoi(opcao);
+    switch (opcao_int) {
+		case 1:
+			insert_new_password(network_socket, user_id);
+			return 1;
+			break;
+		
+		case 2:
+			get_password(network_socket);
+			return 1;
+			break;
+		
+		case 3:
+			update_password(network_socket);
+			return 1;
+			break;
+		
+		case 4:
+			delete_password(network_socket);
+			return 1;
+			break;
+		
+		default:
+			return 0;
+			break;
+    }
 }
 
 // Driver Code
 int main(){
+	string user_id;
 	int network_socket;
 
 	// Create a stream socket
@@ -107,7 +219,8 @@ int main(){
 
 	printf("Connection estabilished\n");
 	
-	login(network_socket);
+	user_id = login(network_socket);
+
 
 	// Close the connection
 	close(network_socket);
