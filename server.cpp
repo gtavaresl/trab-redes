@@ -169,6 +169,150 @@ string login(int clientSocket, sqlite3 *db){
     return user_id;
 }
 
+int insert_new_password(int clientSocket, sqlite3 *db, string user_id){
+    string website;
+    string password;
+    char *err_msg;
+
+    website = recv_string(clientSocket);
+    password = recv_string(clientSocket);
+
+    string sql_final;
+
+    string sql1 = "INSERT INTO password (user_id, website, password)\nVALUES('";
+    string sql2 = "', '";
+    string sql3 = "');";
+
+    sql_final = sql1 + user_id + sql2 + website + sql2 + password + sql3;
+
+    int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
+        cerr << "Insert Password Error!" << endl;
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        
+        send_string(clientSocket, "Erro ao inserir Senha!");
+    }
+
+    cout << "Senha incluida com sucesso!" << endl;
+    send_string(clientSocket, "Senha incluida com sucesso!");
+
+    return 1;
+}
+
+int client_get_password(int clientSocket, sqlite3 *db, string user_id){
+    string website;
+    string password;
+    website = recv_string(clientSocket);
+    password = get_password(db, user_id, website);
+    if (password.empty()){
+        cout << "Website não cadastrado!" << endl;
+        send_string(clientSocket, "-1");
+    } else {
+        cout << "A senha do " << website << " é " << password << endl;
+        send_string(clientSocket, password);
+    }
+}
+
+
+//Altera uma senha existente
+int update_password(int clientSocket, sqlite3 *db, string user_id){
+    string website;
+    string password;
+    char *err_msg;
+
+    website = recv_string(clientSocket);
+    cout << "Website: " << website << endl;
+
+    password = recv_string(clientSocket);
+    cout << "Password: " << password << endl;
+
+    string sql_final;
+
+    string sql1 = "UPDATE password SET password = '";
+    string sql2 = "' WHERE user_id == '";
+    string sql3 = "' AND website == '";
+    string sql4 = "';";
+
+    sql_final = sql1 + password + sql2 + user_id +  sql3 + website + sql4;
+
+    int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
+        cerr << "Insert Password Error!" << endl;
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        send_string(clientSocket, "-1");
+        
+        return -1;
+    }
+
+    cout << "Senha atualizada com sucesso!" << endl;
+    send_string(clientSocket, "1");
+    return 1;
+}
+
+//Deleta uma senha no banco de dados
+int delete_password(int clientSocket, sqlite3 *db, string user_id){
+    string website;
+    char *err_msg;
+
+    website = recv_string(clientSocket);
+    cout << "Website: " << website << endl;
+
+    string sql1 = "DELETE FROM password WHERE user_id == '";
+    string sql2 = "' AND website == '";
+    string sql3 = "';";
+
+    string sql_final = sql1 + user_id + sql2 + website + sql3;    
+
+    int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
+        cerr << "Error!" << endl;
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        send_string(clientSocket, "-1");
+        return -1;
+    }
+
+    cout << "Senha deletada com sucesso!" << endl;
+    send_string(clientSocket, "1");
+    return 1;    
+}
+
+int menu(int clientSocket, sqlite3 *db, string user_id){        
+    int opcao_int;
+
+    opcao_int = stoi(recv_string(clientSocket));
+    switch (opcao_int){
+        case 1:
+            insert_new_password(clientSocket, db, user_id);
+            return 1;
+            break;
+        
+        case 2:
+            client_get_password(clientSocket, db, user_id);
+            return 1;
+            break;
+        
+        case 3:
+            update_password(clientSocket, db, user_id);
+            return 1;
+            break;
+        
+        case 4:
+            delete_password(clientSocket, db, user_id);
+            return 1;
+            break;
+        
+        default:
+            return 0;
+            break;
+    }
+}
+
 // Thread Server
 void* serverthread(void *param){
 	int clientSocket = *((int*)param);

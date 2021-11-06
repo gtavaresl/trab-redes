@@ -221,7 +221,6 @@ int main(){
 	
 	user_id = login(network_socket);
 
-
 	// Close the connection
 	close(network_socket);
 	
