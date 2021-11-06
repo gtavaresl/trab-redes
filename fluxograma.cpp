@@ -123,8 +123,31 @@ int update_password(sqlite3 *db, string user_id){
 }
 
 //Deleta uma senha no banco de dados
-int delete_password(sqlite3 *db, string user_id, string website){
-    return 0;
+int delete_password(sqlite3 *db, string user_id){
+    string website;
+    string password;
+    char *err_msg;
+
+    cout << "Digite nome do website: " << endl;
+    getline(cin, website);
+
+    string sql1 = "DELETE FROM password WHERE user_id == '";
+    string sql2 = "' AND website == '";
+    string sql3 = "';";
+
+    string sql_final = sql1 + user_id + sql2 + website + sql3;    
+
+    int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
+        cerr << "Error!" << endl;
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        return -1;
+    }
+
+    cout << "Senha deletada com sucesso!" << endl;
+    return 1;    
 }
 
 //FALTA TRATAR O ERRO DE INSERIR UMA SENHA JA EXISTENTE
@@ -207,7 +230,7 @@ int menu(sqlite3 *db, string username){
         getline(cin,website);
         password = get_password(db, username, website);
         if (password.empty()){
-            cout << "Webite não cadastrado!" << endl;
+            cout << "Website não cadastrado!" << endl;
         } else {
             cout << "Sua senha do " << website << " é " << password << endl;
         }
@@ -220,7 +243,7 @@ int menu(sqlite3 *db, string username){
         break;
     
     case 4:
-        /* code */
+        delete_password(db,username);
         return 1;
         break;
     
