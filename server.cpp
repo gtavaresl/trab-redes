@@ -26,7 +26,6 @@ using namespace std;
 sem_t x;
 pthread_t tid;
 pthread_t serverthreads[100];
-int clientcount = 0;
 
 string recv_string(int network_socket){
 	vector<char> buffer(MAX_BUF_LENGTH);
@@ -35,12 +34,10 @@ string recv_string(int network_socket){
 	do {
 		bytesReceived = recv(network_socket, &buffer[0], buffer.size(), 0);
 		// append string from buffer.
-		if ( bytesReceived == -1 ) { 
-			// error
-		} else {
-			rcv.append( buffer.cbegin(), buffer.cend() );
-		}
+		if ( bytesReceived != -1 )
+			rcv.append(buffer.cbegin(), buffer.cend());
 	} while ( bytesReceived == MAX_BUF_LENGTH );
+    rcv = (string) rcv.c_str();
 	return rcv;
 }
 
@@ -101,7 +98,7 @@ int callback_list_passwords(void *data, int argc, char** argv, char** azColName)
 
 string get_client(sqlite3 *db, string username, string password){
     Data_Query *user_id = (Data_Query *)calloc(1, sizeof(Data_Query));
-    string sql_query = "SELECT *\nFROM user\nWHERE name = '" + username + "' \nAND password = '" + password + "';";
+    string sql_query = "SELECT *\nFROM user\nWHERE name like '" + username + "' \nAND password like '" + password + "';";
     int rc = sqlite3_exec(db, sql_query.c_str(), callback_client, user_id, NULL);
     
     return user_id->data;
@@ -147,16 +144,17 @@ string login(int clientSocket, sqlite3 *db){
     string username;
 	string user_password;
 	string user_id;
+
 	// Recv Username
 	username = recv_string(clientSocket);
-	
+    
 	cout << "\n Username >" << username << "<\n" << endl;
 
 	// Recv Password
 	user_password = recv_string(clientSocket);
 	
 	cout << "\n Userpass >" << user_password << "<\n" << endl;
-	
+
 	user_id = get_client(db, username, user_password);
 
     if(user_id.empty()){
@@ -213,6 +211,7 @@ int client_get_password(int clientSocket, sqlite3 *db, string user_id){
         cout << "A senha do " << website << " é " << password << endl;
         send_string(clientSocket, password);
     }
+    return 1;
 }
 
 
@@ -317,6 +316,7 @@ int menu(int clientSocket, sqlite3 *db, string user_id){
 void* serverthread(void *param){
 	int clientSocket = *((int*)param);
 	int received;
+    int loop = 1;
 	string user_id;
 	sqlite3 *db;
     char *err_msg = 0;
@@ -324,16 +324,19 @@ void* serverthread(void *param){
     cout << "Novo usuário conectado!" << endl;
     int rc = sqlite3_open("test.db", &db);
     
-    if (rc != SQLITE_OK) {
-        
+    if (rc != SQLITE_OK) {   
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         pthread_exit(NULL);
     }
 
 	user_id = login(clientSocket, db);
-
-	pthread_exit(NULL);
+    
+    while(loop){
+        loop = menu(clientSocket, db, user_id);
+    }
+	
+    pthread_exit(NULL);
 }
 
 // Driver Code

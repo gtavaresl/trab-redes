@@ -22,12 +22,10 @@ string recv_string(int network_socket){
 	do {
 		bytesReceived = recv(network_socket, &buffer[0], buffer.size(), 0);
 		// append string from buffer.
-		if ( bytesReceived == -1 ) { 
-			// error
-		} else {
+		if ( bytesReceived != -1 )
 			rcv.append( buffer.cbegin(), buffer.cend() );
-		}
 	} while ( bytesReceived == MAX_BUF_LENGTH );
+	rcv = (string) rcv.c_str();
 	return rcv;
 }
 
@@ -55,6 +53,7 @@ string login(int network_socket){
 	string username;
     string user_password;
 	string user_id;
+
     cout << "Digite seu nome de usuário: ";
     getline(cin, username);
 	send_string(network_socket, username);
@@ -82,7 +81,7 @@ int insert_new_password(int network_socket, string user_id){
 
     cout << "Digite sua senha: " << endl;
     getline(cin, password);
-	send_string(network_socket, website);
+	send_string(network_socket, password);
 
 	response = recv_string(network_socket);
 
@@ -90,7 +89,7 @@ int insert_new_password(int network_socket, string user_id){
     return 1;
 }
 
-string get_password(int network_socket){
+int get_password(int network_socket){
     string website;
     string password;
 	
@@ -104,7 +103,7 @@ string get_password(int network_socket){
 	} else {
 		cout << "Sua senha do " << website << " é " << password << endl;
 	}
-
+	return 1;
 }
 
 //Altera uma senha existente
@@ -165,34 +164,31 @@ int menu(int network_socket, string user_id) {
     switch (opcao_int) {
 		case 1:
 			insert_new_password(network_socket, user_id);
-			return 1;
 			break;
 		
 		case 2:
 			get_password(network_socket);
-			return 1;
 			break;
 		
 		case 3:
 			update_password(network_socket);
-			return 1;
 			break;
 		
 		case 4:
 			delete_password(network_socket);
-			return 1;
 			break;
 		
 		default:
 			return 0;
-			break;
     }
+	return 1;
 }
 
 // Driver Code
 int main(){
 	string user_id;
 	int network_socket;
+	int loop = 1;
 
 	// Create a stream socket
 	network_socket = socket(AF_INET,
@@ -220,6 +216,10 @@ int main(){
 	printf("Connection estabilished\n");
 	
 	user_id = login(network_socket);
+
+    while(loop){
+        loop = menu(network_socket, user_id);
+    }
 
 	// Close the connection
 	close(network_socket);
