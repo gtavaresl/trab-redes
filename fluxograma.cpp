@@ -15,7 +15,6 @@ public:
     Data_Query();
 };
 
-
 int callback_client(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
     for (int i = 0; i < argc; i++) {
@@ -52,6 +51,7 @@ string get_client(sqlite3 *db, string username, string password){
     return user_id->data;
 }
 
+//FALTA TRATAR O ERRO DO WEBSITE INSERIDO NAO EXISTIR NO DB
 string get_password(sqlite3 *db, string user_id, string website){
     Data_Query *password = (Data_Query *)malloc(sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";
@@ -86,6 +86,8 @@ string insert_client(sqlite3 *db, string username, string user_password){
     return user_id;
 }
 
+//FALTA TRATAR O ERRO DE INSERIR UMA SENHA JA EXISTENTE
+//SUGESTÃO: CASO TENTE INSERIR UMA SENHA JA EXISTENTE DELETA A ANTERIOR E ATUALIZA COM A NOVA
 int insert_new_password(sqlite3 *db, string user_id){
     string website;
     string password;
@@ -138,6 +140,49 @@ string login(sqlite3 *db){
     return user_id;
 }
 
+int menu(sqlite3 *db, string username){        
+    cout << "1 - Guardar uma nova senha;" << endl;
+    cout << "2 - Receber uma senha guardada;" << endl;
+    cout << "3 - Modificar uma senha guardada;" << endl;
+    cout << "4 - Deletar uma senha guardada;" << endl;
+    cout << "5 - Sair;" << endl << endl << "Digite a função que deseja:" << endl;
+
+    int opcao_int;
+    string opcao;
+    string website;
+    getline(cin,opcao);
+
+    opcao_int = stoi(opcao);
+    switch (opcao_int)
+    {
+    case 1:
+        insert_new_password(db, username);
+        return 1;
+        break;
+    
+    case 2:
+        cout << "Digite o website:" << endl;
+        getline(cin,website);
+        cout << "Sua senha do " << website << " é " << get_password(db,username,website) << endl;
+        return 1;
+        break;
+    
+    case 3:
+        /* code */
+        return 1;
+        break;
+    
+    case 4:
+        /* code */
+        return 1;
+        break;
+    
+    default:
+        return 0;
+        break;
+    }
+}
+
 int main(){
     
     sqlite3 *db;
@@ -154,9 +199,14 @@ int main(){
     }
     
     string user_id = login(db);
+
+    int loop = 1;
+    while(loop){
+        loop = menu(db, user_id);
+    }
     //get_client(db, "Teste 1", "123456");
     //insert_client(db);
-    insert_new_password(db, user_id);
+    //insert_new_password(db, user_id);
     //cout << "User: " << user_id << "\nPassword: " << get_password(db, "1", "google.com") << endl;
 
     sqlite3_close(db);
