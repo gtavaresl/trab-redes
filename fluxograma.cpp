@@ -15,10 +15,6 @@ public:
     Data_Query();
 };
 
-/**
- *
- *
- */
 int callback_client(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
     for (int i = 0; i < argc; i++) {
@@ -55,6 +51,7 @@ string get_client(sqlite3 *db, string username, string password){
     return user_id->data;
 }
 
+//FALTA TRATAR O ERRO DO WEBSITE INSERIDO NAO EXISTIR NO DB
 string get_password(sqlite3 *db, string user_id, string website){
     Data_Query *password = (Data_Query *)malloc(sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";
@@ -89,6 +86,8 @@ string insert_client(sqlite3 *db, string username, string user_password){
     return user_id;
 }
 
+//FALTA TRATAR O ERRO DE INSERIR UMA SENHA JA EXISTENTE
+//SUGESTÃO: CASO TENTE INSERIR UMA SENHA JA EXISTENTE DELETA A ANTERIOR E ATUALIZA COM A NOVA
 int insert_new_password(sqlite3 *db, string user_id){
     string website;
     string password;
@@ -141,8 +140,7 @@ string login(sqlite3 *db){
     return user_id;
 }
 
-int menu(string username){    
-    system("clear");
+int menu(sqlite3 *db, string username){        
     cout << "1 - Guardar uma nova senha;" << endl;
     cout << "2 - Receber uma senha guardada;" << endl;
     cout << "3 - Modificar uma senha guardada;" << endl;
@@ -151,18 +149,21 @@ int menu(string username){
 
     int opcao_int;
     string opcao;
+    string website;
     getline(cin,opcao);
 
     opcao_int = stoi(opcao);
     switch (opcao_int)
     {
     case 1:
-        /* code */
+        insert_new_password(db, username);
         return 1;
         break;
     
     case 2:
-        /* code */
+        cout << "Digite o website:" << endl;
+        getline(cin,website);
+        cout << "Sua senha do " << website << " é " << get_password(db,username,website) << endl;
         return 1;
         break;
     
@@ -201,7 +202,7 @@ int main(){
 
     int loop = 1;
     while(loop){
-        loop = menu(user_id);
+        loop = menu(db, user_id);
     }
     //get_client(db, "Teste 1", "123456");
     //insert_client(db);
