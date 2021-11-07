@@ -67,6 +67,13 @@ int main()
     cout << "Message: " << endl;
     getline(cin, message);
     string encrypted = encode(message, key);
+    while (encrypted.empty()){
+        cout << "Erro de char nao permitido!" << endl;
+        cout << "Message: " << endl;
+        getline(cin, message);
+        encrypted = encode(message, key);
+    }
+    
     cout << "Encrypted message:" << encrypted <<endl;
     string decrypted = decode(encrypted, key);
     cout << "Decrypted message:" << decrypted << endl;

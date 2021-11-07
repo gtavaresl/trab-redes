@@ -231,8 +231,8 @@ int update_password(int clientSocket, sqlite3 *db, string user_id){
     string sql_final;
 
     string sql1 = "UPDATE password SET password = '";
-    string sql2 = "' WHERE user_id == '";
-    string sql3 = "' AND website == '";
+    string sql2 = "' WHERE user_id = '";
+    string sql3 = "' AND website = '";
     string sql4 = "';";
 
     sql_final = sql1 + password + sql2 + user_id +  sql3 + website + sql4;
@@ -261,8 +261,8 @@ int delete_password(int clientSocket, sqlite3 *db, string user_id){
     website = recv_string(clientSocket);
     cout << "[User: " << user_id << "] Deletar senha do website: " << website << endl;
 
-    string sql1 = "DELETE FROM password WHERE user_id == '";
-    string sql2 = "' AND website == '";
+    string sql1 = "DELETE FROM password WHERE user_id = '";
+    string sql2 = "' AND website = '";
     string sql3 = "';";
 
     string sql_final = sql1 + user_id + sql2 + website + sql3;    

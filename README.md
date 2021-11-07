@@ -6,7 +6,7 @@ Usa a lib pthreads -> requer rodar em linux
 
 P/ compilar: g++ -o {nome_exec} server.cpp -pthread -lsqlite3
              g++ -o {nome_exec} client.cpp
-             
+
 Fluxograma:  
 
              instalar: sudo apt-get install -y libsqlite3-dev
@@ -17,11 +17,7 @@ Fluxograma:
 
 Caso não tenha como visualizar a tabela, esse site funciona: https://inloop.github.io/sqlite-viewer/
 
+Criptografia - Cifra de Cesar:
 
-Criptografia Hash:
-
-
-            instalar: sudo apt-get install libssl-dev   (biblioteca openssl)
-            
-            Rodar: gcc -o sha256 sha256.c -lcrypto
-                   ./sha256 <arquivo>
+            Rodar: g++ -o {nome_exec} crypto.cpp
+                   ./{nome_exec} <arquivo>

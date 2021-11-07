@@ -109,8 +109,16 @@ string login(int network_socket, int key){
 
     cout << "Digite sua senha: ";
     getline(cin, user_password);
+
+	string encrypted = encode(user_password, key);
+	while (encrypted.empty()){
+        cout << "Erro de char nao permitido!" << endl;
+        cout << "Digite sua senha: " << endl;
+        getline(cin, user_password);
+        encrypted = encode(user_password, key);
+    }
     
-	send_string(network_socket, encode(user_password, key));
+	send_string(network_socket, encrypted);
 	
 	user_id = recv_string(network_socket);
 
@@ -131,7 +139,16 @@ int insert_new_password(int network_socket, string user_id, int key){
 
     cout << "Digite sua senha: ";
     getline(cin, password);
-	send_string(network_socket, encode(password, key));
+
+	string encrypted = encode(password, key);
+	while (encrypted.empty()){
+        cout << "Erro de char nao permitido!" << endl;
+        cout << "Digite sua senha: " << endl;
+        getline(cin, password);
+        encrypted = encode(password, key);
+    }
+
+	send_string(network_socket, encrypted);
 
 	response = recv_string(network_socket);
 
@@ -169,7 +186,15 @@ int update_password(int network_socket, int key){
 
     cout << "Digite sua nova senha: ";
     getline(cin, password);
-	send_string(network_socket, encode(password, key));
+
+	string encrypted = encode(password, key);
+	while (encrypted.empty()){
+        cout << "Erro de char nao permitido!" << endl;
+        cout << "Digite sua nova senha: " << endl;
+        getline(cin, password);
+        encrypted = encode(password, key);
+    }
+	send_string(network_socket, encrypted);
 
 	response = stoi(recv_string(network_socket));
 	if (response == 1)
