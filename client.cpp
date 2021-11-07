@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <vector>
+#include <fstream>
 
 // inet_addr
 #include <arpa/inet.h>
@@ -15,6 +16,53 @@
 
 using namespace std;
 
+// Funcoes que manipulam a chave de criptografia
+// Le a chave do arquivo key.txt
+int load_key(){
+    fstream file;
+    file.open("key.txt", ios::in);
+    if (file.is_open()){
+        string key;
+        getline(file, key);
+        file.close();
+        return stoi(key);
+    }
+    return -1;
+}
+
+int generate_key(){
+    srand(time(0));
+    int key = rand() % 94; // Gerando chave aleatoria
+    fstream file;
+    file.open("key.txt", ios::out);
+    if (file.is_open()){
+        file << to_string(key);
+        file.close();
+        return key;
+    }
+    return -1;
+}
+
+string rotate(string msg, int key){
+    string error;
+    for (int i = 0; i < msg.length(); i++){
+        if (msg[i] < '!' || msg[i] > '~')
+            return error;
+        msg[i] = '!' + (msg[i] - '!' + key) % 94;
+    }
+
+    return msg;
+}
+
+string encode(string msg, int key){
+    return rotate(msg, key);
+}
+
+string decode(string msg, int key){
+    return rotate(msg, 94 - key);
+}
+
+// Funcoes que enviam e recebem as strings na rede
 string recv_string(int network_socket){
 	vector<char> buffer(MAX_BUF_LENGTH);
 	string rcv;   
@@ -49,7 +97,8 @@ int send_string(int network_socket, string str)
     return 1;
 }
 
-string login(int network_socket){
+// Funcoes de acao do cliente na aplicacao
+string login(int network_socket, int key){
 	string username;
     string user_password;
 	string user_id;
@@ -61,27 +110,28 @@ string login(int network_socket){
     cout << "Digite sua senha: ";
     getline(cin, user_password);
     
-	send_string(network_socket, user_password);
+	send_string(network_socket, encode(user_password, key));
 	
 	user_id = recv_string(network_socket);
+
     cout << "Login concluído!" << endl;
 	cout << "User id: " << user_id << endl;
 
     return user_id;
 }
 
-int insert_new_password(int network_socket, string user_id){
+int insert_new_password(int network_socket, string user_id, int key){
     string website;
     string password;
 	string response;
 
-    cout << "Digite nome do website: " << endl;
+    cout << "Digite nome do website: ";
     getline(cin, website);
 	send_string(network_socket, website);
 
-    cout << "Digite sua senha: " << endl;
+    cout << "Digite sua senha: ";
     getline(cin, password);
-	send_string(network_socket, password);
+	send_string(network_socket, encode(password, key));
 
 	response = recv_string(network_socket);
 
@@ -89,11 +139,11 @@ int insert_new_password(int network_socket, string user_id){
     return 1;
 }
 
-int get_password(int network_socket){
+int get_password(int network_socket, int key){
     string website;
     string password;
 	
-	cout << "Digite o website:" << endl;
+	cout << "Digite o website: ";
 	getline(cin, website);
 	send_string(network_socket, website);
 	
@@ -101,24 +151,25 @@ int get_password(int network_socket){
 	if (strcmp(password.c_str(), "-1") == 0){
 		cout << "Website não cadastrado!" << endl;
 	} else {
-		cout << "Sua senha do " << website << " é " << password << endl;
+		password = decode(password, key);
+		cout << "Website: " << website << "\tPassword: " << password << endl;
 	}
 	return 1;
 }
 
 //Altera uma senha existente
-int update_password(int network_socket){
+int update_password(int network_socket, int key){
     string website;
     string password;
     int response;
 
-    cout << "Digite nome do website: " << endl;
+    cout << "Digite nome do website: ";
     getline(cin, website);
 	send_string(network_socket, website);
 
-    cout << "Digite sua nova senha: " << endl;
+    cout << "Digite sua nova senha: ";
     getline(cin, password);
-	send_string(network_socket, password);
+	send_string(network_socket, encode(password, key));
 
 	response = stoi(recv_string(network_socket));
 	if (response == 1)
@@ -134,7 +185,7 @@ int delete_password(int network_socket){
     string website;
     int response;
 
-    cout << "Digite nome do website: " << endl;
+    cout << "Digite nome do website: ";
     getline(cin, website);
 	send_string(network_socket, website);
 
@@ -144,16 +195,15 @@ int delete_password(int network_socket){
 	else
 		cout << "Erro ao deletar senha!" << endl;
 
-
     return 1;
 }
 
-int menu(int network_socket, string user_id) {        
+int menu(int network_socket, string user_id, int key) {        
     cout << "1 - Guardar uma nova senha;" << endl;
     cout << "2 - Receber uma senha guardada;" << endl;
     cout << "3 - Modificar uma senha guardada;" << endl;
     cout << "4 - Deletar uma senha guardada;" << endl;
-    cout << "5 - Sair;" << endl << endl << "Digite a função que deseja:" << endl;
+    cout << "5 - Sair;" << endl << endl << "Digite a função que deseja: ";
 
     int opcao_int;
     string opcao;
@@ -163,15 +213,15 @@ int menu(int network_socket, string user_id) {
     opcao_int = stoi(opcao);
     switch (opcao_int) {
 		case 1:
-			insert_new_password(network_socket, user_id);
+			insert_new_password(network_socket, user_id, key);
 			break;
 		
 		case 2:
-			get_password(network_socket);
+			get_password(network_socket, key);
 			break;
 		
 		case 3:
-			update_password(network_socket);
+			update_password(network_socket, key);
 			break;
 		
 		case 4:
@@ -184,11 +234,22 @@ int menu(int network_socket, string user_id) {
 	return 1;
 }
 
-// Driver Code
+// Main code
 int main(){
+	int key;
 	string user_id;
 	int network_socket;
 	int loop = 1;
+
+    cout << "Carregando chave..." << endl;
+    key = load_key();
+    if(key == -1){
+        cout << "Erro ao carregar arquivo chave..." << endl;
+        cout << "Gerando nova chave" << endl;
+        key = generate_key();
+    } else {
+        cout << "Chave carregada com sucesso!" << endl;
+    }
 
 	// Create a stream socket
 	network_socket = socket(AF_INET,
@@ -213,12 +274,12 @@ int main(){
 		return 0;
 	}
 
-	printf("Connection estabilished\n");
+	cout << "Conexao estabelecida!" << endl;
 	
-	user_id = login(network_socket);
+	user_id = login(network_socket, key);
 
     while(loop){
-        loop = menu(network_socket, user_id);
+        loop = menu(network_socket, user_id, key);
     }
 
 	// Close the connection
