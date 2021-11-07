@@ -3,15 +3,14 @@
 
 using namespace std;
 
-// Implementação da cifra de cesar
+// Implementação da cifra de cesar p/ os char imprimiveis da tabela ASCII
 
 string rotate(string msg, int shift){
-    for (int i = 0; i < msg.length(); i++)
-    {
-        if (msg[i] >= 'a' && msg[i] <= 'z')
-            msg[i] = 'a' + (msg[i] - 'a' + shift) % 26;
-        else if (msg[i] >= 'A' && msg[i] <= 'Z')
-            msg[i] = 'A' + (msg[i] - 'A' + shift) % 26;
+    string error;
+    for (int i = 0; i < msg.length(); i++){
+        if (msg[i] < '!' || msg[i] > '~')
+            return error;
+        msg[i] = '!' + (msg[i] - '!' + shift) % 94;
     }
 
     return msg;
@@ -22,7 +21,7 @@ string encode(string msg, int shift){
 }
 
 string decode(string msg, int shift){
-    return rotate(msg, 26 - shift);
+    return rotate(msg, 94 - shift);
 }
 
 int main()
