@@ -270,7 +270,7 @@ int main(){
 
 	// Check for connection error
 	if (connection_status < 0) {
-		puts("Error\n");
+		cout << "Erro na conexão!" << endl;
 		return 0;
 	}
 

@@ -7,7 +7,6 @@
 
 // For threading, link with lpthread
 #include <pthread.h>
-#include <semaphore.h>
 
 // SQL lib
 #include <sqlite3.h>
@@ -23,7 +22,6 @@
 using namespace std;
 
 // Global variables
-sem_t x;
 pthread_t tid;
 pthread_t serverthreads[100];
 
@@ -148,12 +146,12 @@ string login(int clientSocket, sqlite3 *db){
 	// Recv Username
 	username = recv_string(clientSocket);
     
-	cout << "\n Username >" << username << "<\n" << endl;
+	cout << "Novo login: Username >" << username << "<" << endl;
 
 	// Recv Password
 	user_password = recv_string(clientSocket);
 	
-	cout << "\n Userpass >" << user_password << "<\n" << endl;
+	cout << "Password >" << user_password << "<" << endl;
 
 	user_id = get_client(db, username, user_password);
 
@@ -163,7 +161,7 @@ string login(int clientSocket, sqlite3 *db){
     }
 
 	send_string(clientSocket, user_id);
-    cout << "Login concluído!" << endl;
+    cout << "[User: " << user_id << "] Login concluído!" << endl;
     return user_id;
 }
 
@@ -173,7 +171,10 @@ int insert_new_password(int clientSocket, sqlite3 *db, string user_id){
     char *err_msg;
 
     website = recv_string(clientSocket);
+    cout << "[User: " << user_id << "] Inserir nova senha no website: " << website << endl; 
     password = recv_string(clientSocket);
+    cout << "[User: " << user_id << "] Inserir nova senha: " << password << endl; 
+    
 
     string sql_final;
 
@@ -186,14 +187,14 @@ int insert_new_password(int clientSocket, sqlite3 *db, string user_id){
     int rc = sqlite3_exec(db, sql_final.c_str(), NULL, 0, &err_msg);
     
     if (rc != SQLITE_OK ) {
-        cerr << "Insert Password Error!" << endl;
+        cerr << "[User: " << user_id << "] Erro ao inserir senha!" << endl;
         sqlite3_free(err_msg);        
         sqlite3_close(db);
         
-        send_string(clientSocket, "Erro ao inserir Senha!");
+        send_string(clientSocket, "Erro ao inserir senha!");
     }
 
-    cout << "Senha incluida com sucesso!" << endl;
+    cout << "[User: " << user_id << "] Senha incluida com sucesso!" << endl;
     send_string(clientSocket, "Senha incluida com sucesso!");
 
     return 1;
@@ -205,10 +206,10 @@ int client_get_password(int clientSocket, sqlite3 *db, string user_id){
     website = recv_string(clientSocket);
     password = get_password(db, user_id, website);
     if (password.empty()){
-        cout << "Website não cadastrado!" << endl;
+        cout << "[User: " << user_id << "] Website não cadastrado!" << endl;
         send_string(clientSocket, "-1");
     } else {
-        cout << "A senha do " << website << " é " << password << endl;
+        cout << "[User: " << user_id << "] Website: " << website << "\tPassword: " << password << endl;
         send_string(clientSocket, password);
     }
     return 1;
@@ -247,7 +248,7 @@ int update_password(int clientSocket, sqlite3 *db, string user_id){
         return -1;
     }
 
-    cout << "Senha atualizada com sucesso!" << endl;
+    cout << "[User: " << user_id << "] Senha atualizada com sucesso!" << endl;
     send_string(clientSocket, "1");
     return 1;
 }
@@ -258,7 +259,7 @@ int delete_password(int clientSocket, sqlite3 *db, string user_id){
     char *err_msg;
 
     website = recv_string(clientSocket);
-    cout << "Website: " << website << endl;
+    cout << "[User: " << user_id << "] Deletar senha do website: " << website << endl;
 
     string sql1 = "DELETE FROM password WHERE user_id == '";
     string sql2 = "' AND website == '";
@@ -276,7 +277,7 @@ int delete_password(int clientSocket, sqlite3 *db, string user_id){
         return -1;
     }
 
-    cout << "Senha deletada com sucesso!" << endl;
+    cout <<  "[User: " << user_id << "] Senha deletada com sucesso!" << endl;
     send_string(clientSocket, "1");
     return 1;    
 }
@@ -348,7 +349,6 @@ int main()
 	struct sockaddr_storage serverStorage;
 
 	socklen_t addr_size;
-	sem_init(&x, 0, 1);
 
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -366,9 +366,9 @@ int main()
 	// with 40 max connection
 	// requests queued
 	if (listen(serverSocket, 50) == 0)
-		printf("Listening\n");
+		cout << "Server aguardando conexões" << endl;
 	else
-		printf("Error\n");
+		cout << "Erro ao inicializar Server Socket" << endl;
 
 	// Array for thread
 	pthread_t tid[60];
@@ -386,7 +386,7 @@ int main()
 		if (pthread_create(&serverthreads[i++], NULL,
 							serverthread, &newSocket)!= 0){
 				// Error in creating thread
-				printf("Failed to create thread\n");
+				cout << "Falha ao criar thread" << endl;
 		}
 	}
 
