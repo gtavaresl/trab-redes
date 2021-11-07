@@ -1,13 +1,17 @@
 # trab-redes
-Usa a lib pthreads -> requer rodar em linux
+Cliente/Servidor:
 
-              instalar: sudo apt-get install -y libsqlite3-dev
-                       sudo apt-get install sqlite3
+              Usa a lib pthreads -> requer rodar em linux
 
-P/ compilar: g++ -o {nome_exec} server.cpp -pthread -lsqlite3
-             g++ -o {nome_exec} client.cpp
+                            instalar: sudo apt-get install -y libsqlite3-dev
+                                   sudo apt-get install sqlite3
 
-Fluxograma:  
+              P/ compilar: g++ -o {nome_exec} server.cpp -pthread -lsqlite3
+                     g++ -o {nome_exec} client.cpp
+
+              P/ Executar: ./{nome_exec}
+
+Fluxograma:
 
              instalar: sudo apt-get install -y libsqlite3-dev
                        sudo apt-get install sqlite3

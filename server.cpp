@@ -102,7 +102,6 @@ string get_client(sqlite3 *db, string username, string password){
     return user_id->data;
 }
 
-//FALTA TRATAR O ERRO DO WEBSITE INSERIDO NAO EXISTIR NO DB
 string get_password(sqlite3 *db, string user_id, string website){
     Data_Query *password = (Data_Query *)calloc(1, sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";

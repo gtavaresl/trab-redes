@@ -224,8 +224,8 @@ int delete_password(int network_socket){
 }
 
 int menu(int network_socket, string user_id, int key) {        
-    cout << "1 - Guardar uma nova senha;" << endl;
-    cout << "2 - Receber uma senha guardada;" << endl;
+    cout << "1 - Inserir uma nova senha;" << endl;
+    cout << "2 - Consultar uma senha guardada;" << endl;
     cout << "3 - Modificar uma senha guardada;" << endl;
     cout << "4 - Deletar uma senha guardada;" << endl;
     cout << "5 - Sair;" << endl << endl << "Digite a função que deseja: ";
