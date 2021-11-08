@@ -25,6 +25,12 @@ using namespace std;
 pthread_t tid;
 pthread_t serverthreads[100];
 
+/**
+ * Recebe a mensagem da conexão com o client.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @return                      A string com a mensagem recebida  
+*/
 string recv_string(int network_socket){
 	vector<char> buffer(MAX_BUF_LENGTH);
 	string rcv;   
@@ -39,6 +45,13 @@ string recv_string(int network_socket){
 	return rcv;
 }
 
+/**
+ * Envia uma mensagem ao client.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param str                   A mensagem a ser enviada
+ * @return                      Um inteiro indicando o resultado da função
+*/
 int send_string(int network_socket, string str)
 {
     const char* data_ptr  = str.data();
@@ -66,6 +79,15 @@ public:
     Data_Query();
 };
 
+/**
+ * Callback para salvar o resultado da query no user_id.
+ * 
+ * @param data                  Dados recebidos da query      
+ * @param argc                  Tamanho da query
+ * @param argv                  Argumento em que será salvo os dados
+ * @param azColName             Valor da Coluna selecionada
+ * @return                      Um inteiro confirmando a operação     
+*/
 int callback_client(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
     for (int i = 0; i < argc; i++) {
@@ -77,6 +99,15 @@ int callback_client(void* data, int argc, char** argv, char** azColName){
     return 0;
 }
 
+/**
+ * Callback para salvar o resultado da query na password.
+ * 
+ * @param data                  Dados recebidos da query      
+ * @param argc                  Tamanho da query
+ * @param argv                  Argumento em que será salvo os dados
+ * @param azColName             Valor da Coluna selecionada
+ * @return                      Um inteiro confirmando a operação     
+*/
 int callback_password(void* data, int argc, char** argv, char** azColName){
     Data_Query *DQ = (Data_Query *) data;
     for (int i = 0; i < argc; i++) {
@@ -88,12 +119,29 @@ int callback_password(void* data, int argc, char** argv, char** azColName){
     return 0;
 }
 
+/**
+ * Callback para exibir os valores armazenados no que foi recebido da query.
+ * 
+ * @param data                  Dados recebidos da query      
+ * @param argc                  Tamanho da query
+ * @param argv                  Argumento em que será salvo os dados
+ * @param azColName             Valor da Coluna selecionada
+ * @return                      Um inteiro confirmando a operação     
+*/
 int callback_list_passwords(void *data, int argc, char** argv, char** azColName){
     for (int i = 0; i < argc; i++)
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     return 0;
 }
 
+/**
+ * Consulta o user_id do usuario inserido.
+ * 
+ * @param db                    Conexão com o banco de dados
+ * @param username              String com o username do usuário
+ * @param password              String com a senha embaralhada
+ * @return                      Retorna string com o id do usuário
+*/
 string get_client(sqlite3 *db, string username, string password){
     Data_Query *user_id = (Data_Query *)calloc(1, sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM user\nWHERE name like '" + username + "' \nAND password like '" + password + "';";
@@ -102,6 +150,14 @@ string get_client(sqlite3 *db, string username, string password){
     return user_id->data;
 }
 
+/**
+ * Consulta a senha relativa ao website e usuario inserido.
+ * 
+ * @param db                    Conexão com o banco de dados
+ * @param user_id               String com o user_id do usuário
+ * @param website               String com a website escolhido
+ * @return                      Retorna string com a senha escolhida
+*/
 string get_password(sqlite3 *db, string user_id, string website){
     Data_Query *password = (Data_Query *)calloc(1, sizeof(Data_Query));
     string sql_query = "SELECT *\nFROM password\nWHERE user_id = '" + user_id + "' \nAND website = '" + website + "';";
@@ -110,7 +166,14 @@ string get_password(sqlite3 *db, string user_id, string website){
     return password->data;
 }
 
-// Insere novo cliente na tabela user
+/**
+ * Insere um novo usuario e sua senha.
+ * 
+ * @param db                    Conexão com o banco de dados
+ * @param username              String com o username do usuário
+ * @param user_password         String com a senha
+ * @return                      Retorna string com a senha escolhida
+*/
 string insert_client(sqlite3 *db, string username, string user_password){
     char *err_msg;
 
@@ -137,6 +200,13 @@ string insert_client(sqlite3 *db, string username, string user_password){
     return user_id;
 }
 
+/**
+ * Loga ou cadastra o usuário.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados
+ * @return                      String com o user_id    
+*/
 string login(int clientSocket, sqlite3 *db){
     string username;
 	string user_password;
@@ -164,6 +234,14 @@ string login(int clientSocket, sqlite3 *db){
     return user_id;
 }
 
+/**
+ * Insere uma nova senha no banco.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados  
+ * @param user_id               String com o user_id do usuário
+ * @return                      Um inteiro confirmando a operação     
+*/
 int insert_new_password(int clientSocket, sqlite3 *db, string user_id){
     string website;
     string password;
@@ -199,6 +277,14 @@ int insert_new_password(int clientSocket, sqlite3 *db, string user_id){
     return 1;
 }
 
+/**
+ * Consulta uma senha do usuário.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados  
+ * @param user_id               String com o user_id do usuário
+ * @return                      Um inteiro confirmando a operação
+*/
 int client_get_password(int clientSocket, sqlite3 *db, string user_id){
     string website;
     string password;
@@ -215,7 +301,14 @@ int client_get_password(int clientSocket, sqlite3 *db, string user_id){
 }
 
 
-//Altera uma senha existente
+/**
+ * Modifica uma senha do usuário.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados  
+ * @param user_id               String com o user_id do usuário
+ * @return                      Um inteiro confirmando a operação
+*/
 int update_password(int clientSocket, sqlite3 *db, string user_id){
     string website;
     string password;
@@ -252,7 +345,14 @@ int update_password(int clientSocket, sqlite3 *db, string user_id){
     return 1;
 }
 
-//Deleta uma senha no banco de dados
+/**
+ * Deleta uma senha do usuário.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados  
+ * @param user_id               String com o user_id do usuário
+ * @return                      Um inteiro confirmando a operação
+*/
 int delete_password(int clientSocket, sqlite3 *db, string user_id){
     string website;
     char *err_msg;
@@ -281,6 +381,14 @@ int delete_password(int clientSocket, sqlite3 *db, string user_id){
     return 1;    
 }
 
+/**
+ * Recebe e seleciona a função desejada pelo usuário.
+ * 
+ * @param clientSocket          Socket em que foi estabelecida a conexão
+ * @param db                    Conexão com o banco de dados  
+ * @param user_id               String com o user_id do usuário
+ * @return                      Um inteiro para determinar a próxima ação do programa
+*/
 int menu(int clientSocket, sqlite3 *db, string user_id){        
     int opcao_int;
 
@@ -312,7 +420,11 @@ int menu(int clientSocket, sqlite3 *db, string user_id){
     }
 }
 
-// Thread Server
+/**
+ * Função executada por uma thread com a conexão de um novo client
+ * 
+ * @param param                 Porta alocada para a conexão
+*/
 void* serverthread(void *param){
 	int clientSocket = *((int*)param);
 	int received;
@@ -339,7 +451,11 @@ void* serverthread(void *param){
     pthread_exit(NULL);
 }
 
-// Driver Code
+/**
+ * Inicia o programa do servidor, aguarda as conexões do client e cria threads para manejá-las.
+ * 
+ * @return                      Um inteiro para o sistema determinar o funcionamento do programa
+*/
 int main()
 {
 	// Initialize variables
