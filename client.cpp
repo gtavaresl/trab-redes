@@ -16,8 +16,11 @@
 
 using namespace std;
 
-// Funcoes que manipulam a chave de criptografia
-// Le a chave do arquivo key.txt
+/**
+ * Carrega a chave do usuário.
+ *
+ * @return                      O valor da chave ou -1 indicando erro
+ */
 int load_key(){
     fstream file;
     file.open("key.txt", ios::in);
@@ -30,6 +33,11 @@ int load_key(){
     return -1;
 }
 
+/**
+ * Gera uma chave para o usuário.
+ * 
+ * @return                      O valor da chave ou -1 indicando erro
+*/
 int generate_key(){
     srand(time(0));
     int key = rand() % 94; // Gerando chave aleatoria
@@ -43,6 +51,13 @@ int generate_key(){
     return -1;
 }
 
+/**
+ * Embaralha a string de maneira semelhante à uma cifra de cesar.
+ * 
+ * @param msg                   Mensagem a qual será embaralhada
+ * @param key                   Valor inteiro referente à magnitude do embaralhamento
+ * @return                      A string com o valor de msg embaralhado
+ */
 string rotate(string msg, int key){
     string error;
     for (int i = 0; i < msg.length(); i++){
@@ -54,15 +69,34 @@ string rotate(string msg, int key){
     return msg;
 }
 
+/**
+ * Embaralha a mensagem para ocultar seu valor inicial.
+ *  
+ * @param msg                   Mensagem a qual será embaralhada
+ * @param key                   Valor inteiro referente à magnitude do embaralhamento
+ * @return                      A string com o valor da mensagem embaralhado
+*/
 string encode(string msg, int key){
     return rotate(msg, key);
 }
 
+/**
+ * Embaralha a mensagem para revelar seu valor inicial.
+ *  
+ * @param msg                   Mensagem a qual será embaralhada
+ * @param key                   Valor inteiro referente à magnitude do embaralhamento
+ * @return                      A string com o valor inicial quando registrado 
+*/
 string decode(string msg, int key){
     return rotate(msg, 94 - key);
 }
 
-// Funcoes que enviam e recebem as strings na rede
+/**
+ * Recebe a mensagem da conexão com o servidor.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @return                      A string com a mensagem recebida  
+*/
 string recv_string(int network_socket){
 	vector<char> buffer(MAX_BUF_LENGTH);
 	string rcv;   
@@ -77,6 +111,13 @@ string recv_string(int network_socket){
 	return rcv;
 }
 
+/**
+ * Envia uma mensagem ao servidor.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param str                   A mensagem a ser enviada
+ * @return                      Um inteiro indicando o resultado da função
+*/
 int send_string(int network_socket, string str)
 {
     const char* data_ptr  = str.data();
@@ -97,7 +138,13 @@ int send_string(int network_socket, string str)
     return 1;
 }
 
-// Funcoes de acao do cliente na aplicacao
+/**
+ * Envia para o servidor as credenciais do usuário.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param key                   Chave para as funcionalidades de criptografia
+ * @return                      O valor referente ao user_id recebido do servidor
+*/
 string login(int network_socket, int key){
 	string username;
     string user_password;
@@ -128,6 +175,14 @@ string login(int network_socket, int key){
     return user_id;
 }
 
+/**
+ * Insere uma nova senha no servidor.
+ *  
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param user_id               Valor referente ao usuario operando no servidor
+ * @param key                   Chave para as funcionalidades de criptografia
+ * @return                      Um inteiro confirmando a operação
+*/
 int insert_new_password(int network_socket, string user_id, int key){
     string website;
     string password;
@@ -156,6 +211,13 @@ int insert_new_password(int network_socket, string user_id, int key){
     return 1;
 }
 
+/**
+ * Consulta a senha que o usuário deseja.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param key                   Chave para as funcionalidades de criptografia
+ * @return                      Um inteiro confirmando a operação
+*/
 int get_password(int network_socket, int key){
     string website;
     string password;
@@ -174,7 +236,13 @@ int get_password(int network_socket, int key){
 	return 1;
 }
 
-//Altera uma senha existente
+/**
+ * Atualiza uma das senhas do usuário.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param key                   Chave para as funcionalidades de criptografia
+ * @return                      Um inteiro confirmando a operação 
+*/
 int update_password(int network_socket, int key){
     string website;
     string password;
@@ -205,7 +273,12 @@ int update_password(int network_socket, int key){
     return response;
 }
 
-//Deleta uma senha no banco de dados
+/**
+ * Deleta uma das senhas do usuário.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @return                      Um inteiro confirmando a operação
+*/
 int delete_password(int network_socket){
     string website;
     int response;
@@ -223,6 +296,14 @@ int delete_password(int network_socket){
     return 1;
 }
 
+/**
+ * Determina as funcionalidades que o usuário pode escolher.
+ * 
+ * @param network_socket        Socket em que foi estabelecida a conexão
+ * @param user_id               Valor referente ao usuario operando no servidor
+ * @param key                   Chave para as funcionalidades de criptografia
+ * @return                      Um inteiro para determinar a próxima ação do programa
+*/
 int menu(int network_socket, string user_id, int key) {        
     cout << "1 - Inserir uma nova senha;" << endl;
     cout << "2 - Consultar uma senha guardada;" << endl;
@@ -259,7 +340,11 @@ int menu(int network_socket, string user_id, int key) {
 	return 1;
 }
 
-// Main code
+/**
+ * Inicia o programa client, estabelece a conexão com o servidor e inicia a interface para o usuário.
+ * 
+ * @return                      Um inteiro para o sistema determinar o funcionamento do programa
+*/
 int main(){
 	int key;
 	string user_id;
